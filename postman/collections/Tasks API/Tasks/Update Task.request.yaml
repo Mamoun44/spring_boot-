@@ -1,0 +1,40 @@
+$kind: http-request
+name: Update Task
+method: PUT
+url: '{{baseUrl}}/tasks/{{taskId}}'
+description: Update an existing task by ID. Requires taskId variable to be set.
+order: 4000
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "title": "Updated Task Title",
+      "description": "Updated description",
+      "status": "IN_PROGRESS",
+      "priority": "MEDIUM"
+    }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test("Status code is 200", function () {
+        pm.response.to.have.status(200);
+      });
+
+      pm.test("Title was updated", function () {
+        const json = pm.response.json();
+        pm.expect(json.title).to.eql("Updated Task Title");
+      });
+
+      pm.test("Status was updated", function () {
+        const json = pm.response.json();
+        pm.expect(json.status).to.eql("IN_PROGRESS");
+      });
+
+      pm.test("Priority was updated", function () {
+        const json = pm.response.json();
+        pm.expect(json.priority).to.eql("MEDIUM");
+      });

@@ -1,0 +1,22 @@
+$kind: http-request
+name: Delete Task
+method: DELETE
+url: '{{baseUrl}}/tasks/{{taskId}}'
+description: Delete a task by ID. Requires taskId variable to be set.
+order: 5000
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test("Status code is 204 or 200", function () {
+        pm.expect(pm.response.code).to.be.oneOf([200, 204]);
+      });
+
+      pm.test("Task is deleted - GET returns 404", async function () {
+        const taskId = pm.collectionVariables.get("taskId");
+        const response = await pm.sendRequest({
+          url: pm.collectionVariables.get("baseUrl") + "/tasks/" + taskId,
+          method: "GET"
+        });
+        pm.expect(response.code).to.eql(404);
+      });

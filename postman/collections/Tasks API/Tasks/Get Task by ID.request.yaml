@@ -1,0 +1,33 @@
+$kind: http-request
+name: Get Task by ID
+method: GET
+url: '{{baseUrl}}/tasks/{{taskId}}'
+description: Retrieve a single task by its ID. Requires taskId variable to be set (run Create Task first).
+order: 3000
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test("Status code is 200", function () {
+        pm.response.to.have.status(200);
+      });
+
+      pm.test("Response has correct id", function () {
+        const json = pm.response.json();
+        pm.expect(String(json.id)).to.eql(String(pm.collectionVariables.get("taskId")));
+      });
+
+      pm.test("Response has title field", function () {
+        const json = pm.response.json();
+        pm.expect(json).to.have.property('title');
+      });
+
+      pm.test("Response has status field", function () {
+        const json = pm.response.json();
+        pm.expect(json).to.have.property('status');
+      });
+
+      pm.test("Response has priority field", function () {
+        const json = pm.response.json();
+        pm.expect(json).to.have.property('priority');
+      });

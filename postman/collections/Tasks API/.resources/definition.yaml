@@ -1,0 +1,5 @@
+$kind: collection
+name: Tasks API
+description: |-
+  Collection for testing the Spring Boot Tasks API.
+  Base URL: {{baseUrl}} (default: http://localhost:8080)

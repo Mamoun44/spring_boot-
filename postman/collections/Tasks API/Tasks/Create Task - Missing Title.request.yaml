@@ -1,0 +1,28 @@
+$kind: http-request
+name: Create Task - Missing Title
+method: POST
+url: '{{baseUrl}}/tasks'
+description: Attempt to create a task without a required title field. Should return 400.
+order: 7000
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "description": "No title provided",
+      "status": "TODO",
+      "priority": "LOW"
+    }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test("Status code is 400", function () {
+        pm.response.to.have.status(400);
+      });
+
+      pm.test("Response time is under 500ms", function () {
+        pm.expect(pm.response.responseTime).to.be.below(500);
+      });

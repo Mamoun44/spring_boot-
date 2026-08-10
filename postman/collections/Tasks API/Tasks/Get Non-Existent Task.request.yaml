@@ -1,0 +1,17 @@
+$kind: http-request
+name: Get Non-Existent Task
+method: GET
+url: '{{baseUrl}}/tasks/99999'
+description: Attempt to retrieve a task that does not exist. Should return 404.
+order: 6000
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test("Status code is 404", function () {
+        pm.response.to.have.status(404);
+      });
+
+      pm.test("Response time is under 500ms", function () {
+        pm.expect(pm.response.responseTime).to.be.below(500);
+      });

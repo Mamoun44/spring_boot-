@@ -1,0 +1,28 @@
+$kind: http-request
+name: http://localhost:8080/api/tasks
+description: ""
+url: http://localhost:8080/api/tasks
+method: POST
+body:
+  type: json
+  content: "{\r
+
+    \  \"id\" : 1,\r
+
+    \  \"title\" : \"task 1\",\r
+
+    \  \"description\" : \"spring boot proj\",\r
+
+    \  \"status\" : \"undone\",\r
+
+    \  \"priority\" : \"high\"\r
+
+    \r
+
+    }"
+settings:
+  strictSSL: false
+  followRedirects: true
+  disableCookies: false
+  maxResponseSize: 52428800
+order: 2274816693370879

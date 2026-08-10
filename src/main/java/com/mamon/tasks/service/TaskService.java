@@ -1,19 +1,23 @@
 package com.mamon.tasks.service;
 
-import com.mamon.tasks.model.Task;
+import com.mamon.tasks.dto.TaskRequestDto;
+import com.mamon.tasks.dto.TaskResponseDto;
+import com.mamon.tasks.model.TaskPriority;
 import com.mamon.tasks.model.TaskStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
 public interface TaskService {
-    List<Task> getTasks();
-    void creatTask(Task task);
+    Page<TaskResponseDto> getAllTasks(Pageable pageable);
+    TaskResponseDto getTaskById(Long id);
+    TaskResponseDto createTask(TaskRequestDto dto);
+    TaskResponseDto updateTask(Long id, TaskRequestDto dto);
+    TaskResponseDto updateTaskStatus(Long id, TaskStatus status);
+    void deleteTaskById(Long id);
 
-    Task getTaskById(Long id);
-
-    boolean deleteTaskById(Long id);
-
-    boolean updateTaskById(Long id, Task updatedTask);
-    boolean updateTaskStatus(Long id, TaskStatus status);
-    List<Task> getTasksByStatus(TaskStatus status);
+    List<TaskResponseDto> getTasksByStatus(TaskStatus status);
+    List<TaskResponseDto> getTasksByPriority(TaskPriority priority);
+    List<TaskResponseDto> getOverdueTasks();
 }

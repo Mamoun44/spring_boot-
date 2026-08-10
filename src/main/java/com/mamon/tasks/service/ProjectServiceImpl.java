@@ -1,13 +1,22 @@
 package com.mamon.tasks.service;
 
+import com.mamon.tasks.dto.ProjectRequestDto;
+import com.mamon.tasks.dto.ProjectResponseDto;
+import com.mamon.tasks.dto.TaskRequestDto;
+import com.mamon.tasks.dto.TaskResponseDto;
+import com.mamon.tasks.exception.DuplicateProjectNameException;
+import com.mamon.tasks.exception.ProjectNotFoundException;
+import com.mamon.tasks.mapper.ProjectMapper;
+import com.mamon.tasks.mapper.TaskMapper;
 import com.mamon.tasks.model.Project;
 import com.mamon.tasks.model.Task;
+import com.mamon.tasks.model.TaskStatus;
 import com.mamon.tasks.repository.ProjectRepository;
 import com.mamon.tasks.repository.TaskRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class ProjectServiceImpl implements ProjectService {
@@ -21,57 +30,73 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public List<Project> getAllProjects() {
-        return projectRepository.findAll();
+    public List<ProjectResponseDto> getAllProjects() {
+        return projectRepository.findAll().stream()
+                .map(ProjectMapper::toResponseDto)
+                .collect(Collectors.toList());
     }
 
     @Override
-    public Project getProjectById(Long id) {
-        return projectRepository.findById(id).orElse(null);
+    public ProjectResponseDto getProjectById(Long id) {
+        Project project = projectRepository.findById(id)
+                .orElseThrow(() -> new ProjectNotFoundException(id));
+        return ProjectMapper.toResponseDto(project);
     }
 
     @Override
-    public Project createProject(Project project) {
-        return projectRepository.save(project);
-    }
-
-    @Override
-    public boolean deleteProject(Long id) {
-        if (projectRepository.existsById(id)) {
-            projectRepository.deleteById(id);
-            return true;
+    public ProjectResponseDto createProject(ProjectRequestDto dto) {
+        if (projectRepository.existsByName(dto.getName())) {
+            throw new DuplicateProjectNameException(dto.getName());
         }
-        return false;
+        Project project = ProjectMapper.toEntity(dto);
+        Project saved = projectRepository.save(project);
+        return ProjectMapper.toResponseDto(saved);
     }
 
     @Override
-    public Task addTaskToProject(Long projectId, Task task) {
-        Optional<Project> projectOptional = projectRepository.findById(projectId);
-        if (projectOptional.isPresent()) {
-            task.setProject(projectOptional.get());
-            return taskRepository.save(task);
-        }
-        return null;
-    }
+    public ProjectResponseDto updateProject(Long id, ProjectRequestDto dto) {
+        Project project = projectRepository.findById(id)
+                .orElseThrow(() -> new ProjectNotFoundException(id));
 
-    @Override
-    public List<Task> getTasksByProjectId(Long projectId) {
-        return taskRepository.findByProjectId(projectId);
-    }
-
-    @Override
-    public boolean updateProject(Project updatedProject, Long id) {
-        Optional<Project> projectOptional = projectRepository.findById(id);
-        if (projectOptional.isPresent()) {
-            Project project = projectOptional.get();
-            project.setName(updatedProject.getName());
-            project.setDescription(updatedProject.getDescription());
-            projectRepository.save(project);
-            return true;
+        if (!project.getName().equalsIgnoreCase(dto.getName()) && projectRepository.existsByName(dto.getName())) {
+            throw new DuplicateProjectNameException(dto.getName());
         }
 
-        return false;
+        project.setName(dto.getName());
+        project.setDescription(dto.getDescription());
+        Project updated = projectRepository.save(project);
+        return ProjectMapper.toResponseDto(updated);
     }
 
+    @Override
+    public void deleteProject(Long id) {
+        if (!projectRepository.existsById(id)) {
+            throw new ProjectNotFoundException(id);
+        }
+        projectRepository.deleteById(id);
+    }
 
+    @Override
+    public TaskResponseDto addTaskToProject(Long projectId, TaskRequestDto dto) {
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new ProjectNotFoundException(projectId));
+
+        Task task = TaskMapper.toEntity(dto);
+        if (task.getStatus() == null) {
+            task.setStatus(TaskStatus.TODO);
+        }
+        task.setProject(project);
+        Task saved = taskRepository.save(task);
+        return TaskMapper.toResponseDto(saved);
+    }
+
+    @Override
+    public List<TaskResponseDto> getTasksByProjectId(Long projectId) {
+        if (!projectRepository.existsById(projectId)) {
+            throw new ProjectNotFoundException(projectId);
+        }
+        return taskRepository.findByProjectId(projectId).stream()
+                .map(TaskMapper::toResponseDto)
+                .collect(Collectors.toList());
+    }
 }

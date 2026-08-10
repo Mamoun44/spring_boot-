@@ -1,112 +1,103 @@
 package com.mamon.tasks.service;
 
+import com.mamon.tasks.dto.TaskRequestDto;
+import com.mamon.tasks.dto.TaskResponseDto;
+import com.mamon.tasks.exception.TaskNotFoundException;
+import com.mamon.tasks.mapper.TaskMapper;
 import com.mamon.tasks.model.Task;
+import com.mamon.tasks.model.TaskPriority;
 import com.mamon.tasks.model.TaskStatus;
 import com.mamon.tasks.repository.TaskRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class TaskServiceImpl implements TaskService {
-    //private List<Task> tasks = new ArrayList<>();
 
-    TaskRepository taskRepository;
-    private Long nextId = 1L;
+    private final TaskRepository taskRepository;
 
     public TaskServiceImpl(TaskRepository taskRepository) {
         this.taskRepository = taskRepository;
     }
 
-    //private Long currentId = 1L;
     @Override
-    public List<Task> getTasks() {
-        return taskRepository.findAll();
+    public Page<TaskResponseDto> getAllTasks(Pageable pageable) {
+        return taskRepository.findAll(pageable).map(TaskMapper::toResponseDto);
     }
 
     @Override
-    public void creatTask(Task task) {
-        //task.setId(currentId++);
-        //tasks.add(task);
-        taskRepository.save(task);
-
+    public TaskResponseDto getTaskById(Long id) {
+        Task task = taskRepository.findById(id)
+                .orElseThrow(() -> new TaskNotFoundException(id));
+        return TaskMapper.toResponseDto(task);
     }
 
     @Override
-    public Task getTaskById(Long id) {
-/*
-        for(Task task : tasks){
-            if(task.getId().equals(id))
-                return task;
+    public TaskResponseDto createTask(TaskRequestDto dto) {
+        Task task = TaskMapper.toEntity(dto);
+        if (task.getStatus() == null) {
+            task.setStatus(TaskStatus.TODO);
         }
-        return null;
-*/
-        return taskRepository.findById(id).orElse(null);
+        Task saved = taskRepository.save(task);
+        return TaskMapper.toResponseDto(saved);
     }
 
     @Override
-    public boolean deleteTaskById(Long id) {
-/*
-        for(Task task : tasks){
-            if(task.getId().equals(id)){
-                tasks.remove(task);
-                return true;
-            }
-        }
-        return false;
-*/
-        try {
-            taskRepository.deleteById(id);
-            return true;
-        }catch (Exception e){return false;}
+    public TaskResponseDto updateTask(Long id, TaskRequestDto dto) {
+        Task task = taskRepository.findById(id)
+                .orElseThrow(() -> new TaskNotFoundException(id));
+
+        task.setTitle(dto.getTitle());
+        task.setDescription(dto.getDescription());
+        if (dto.getStatus() != null) task.setStatus(dto.getStatus());
+        task.setPriority(dto.getPriority());
+        task.setDueDate(dto.getDueDate());
+
+        Task updated = taskRepository.save(task);
+        return TaskMapper.toResponseDto(updated);
     }
 
     @Override
-    public boolean updateTaskById(Long id, Task updatedTask) {
+    public TaskResponseDto updateTaskStatus(Long id, TaskStatus status) {
+        Task task = taskRepository.findById(id)
+                .orElseThrow(() -> new TaskNotFoundException(id));
 
-/*
-        for(Task task : tasks){
-            if(task.getId().equals(id)){
-                task.setTitle(updatedTask.getTitle());
-                task.setDescription(updatedTask.getDescription());
-                task.setStatus(updatedTask.getStatus());
-                task.setPriority(updatedTask.getPriority());
-                return true;
-            }
-
-        }
-        return false;
-*/
-        Optional<Task> TaskOptional = taskRepository.findById(id);
-        if(TaskOptional.isPresent()){
-            Task task = TaskOptional.get();
-            task.setTitle(updatedTask.getTitle());
-            task.setDescription(updatedTask.getDescription());
-            task.setStatus(updatedTask.getStatus());
-            task.setPriority(updatedTask.getPriority());
-            taskRepository.save(task);
-            return true;
-        }
-    return false;
+        task.setStatus(status);
+        Task updated = taskRepository.save(task);
+        return TaskMapper.toResponseDto(updated);
     }
 
     @Override
-    public boolean updateTaskStatus(Long id, TaskStatus status) {
-        Optional<Task> optionalTask = taskRepository.findById(id);
-        if (optionalTask.isPresent()) {
-            Task task = optionalTask.get();
-            task.setStatus(status);
-            taskRepository.save(task);
-            return true;
+    public void deleteTaskById(Long id) {
+        if (!taskRepository.existsById(id)) {
+            throw new TaskNotFoundException(id);
         }
-        return false;
+        taskRepository.deleteById(id);
     }
 
     @Override
-    public List<Task> getTasksByStatus(TaskStatus status) {
-        return taskRepository.findByStatus(status);
+    public List<TaskResponseDto> getTasksByStatus(TaskStatus status) {
+        return taskRepository.findByStatus(status).stream()
+                .map(TaskMapper::toResponseDto)
+                .collect(Collectors.toList());
     }
 
+    @Override
+    public List<TaskResponseDto> getTasksByPriority(TaskPriority priority) {
+        return taskRepository.findByPriority(priority).stream()
+                .map(TaskMapper::toResponseDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<TaskResponseDto> getOverdueTasks() {
+        return taskRepository.findOverdueTasks(LocalDate.now()).stream()
+                .map(TaskMapper::toResponseDto)
+                .collect(Collectors.toList());
+    }
 }

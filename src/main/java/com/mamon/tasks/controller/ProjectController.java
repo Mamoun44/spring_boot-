@@ -40,13 +40,14 @@ public class ProjectController {
 
     @PutMapping("/{id}")
     public ResponseEntity<ProjectResponseDto> updateProject(@PathVariable Long id, @Valid @RequestBody ProjectRequestDto dto) {
-        return ResponseEntity.ok(projectService.updateProject(id, dto));
+        projectService.updateProject(id, dto);
+        return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteProject(@PathVariable Long id) {
         projectService.deleteProject(id);
-        return ResponseEntity.noContent().build(); // 204 No Content
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{projectId}/tasks")

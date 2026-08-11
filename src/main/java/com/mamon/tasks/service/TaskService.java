@@ -10,12 +10,12 @@ import org.springframework.data.domain.Pageable;
 import java.util.List;
 
 public interface TaskService {
-    Page<TaskResponseDto> getAllTasks(Pageable pageable);
+    List<TaskResponseDto> getAllTasks();
     TaskResponseDto getTaskById(Long id);
     TaskResponseDto createTask(TaskRequestDto dto);
-    TaskResponseDto updateTask(Long id, TaskRequestDto dto);
-    TaskResponseDto updateTaskStatus(Long id, TaskStatus status);
-    void deleteTaskById(Long id);
+    boolean  updateTaskById(Long id, TaskRequestDto dto);
+    boolean  updateTaskStatus(Long id, TaskStatus status);
+    boolean  deleteTaskById(Long id);
 
     List<TaskResponseDto> getTasksByStatus(TaskStatus status);
     List<TaskResponseDto> getTasksByPriority(TaskPriority priority);

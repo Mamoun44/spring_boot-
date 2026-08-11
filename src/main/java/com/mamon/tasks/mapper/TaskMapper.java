@@ -8,6 +8,7 @@ public class TaskMapper {
 
     public static TaskResponseDto toResponseDto(Task task) {
         if (task == null) return null;
+
         return new TaskResponseDto(
                 task.getId(),
                 task.getTitle(),

@@ -31,9 +31,10 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     public List<ProjectResponseDto> getAllProjects() {
-        return projectRepository.findAll().stream()
+        return projectRepository.findAll()
+                .stream()
                 .map(ProjectMapper::toResponseDto)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
@@ -54,7 +55,7 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public ProjectResponseDto updateProject(Long id, ProjectRequestDto dto) {
+    public boolean updateProject(Long id, ProjectRequestDto dto) {
         Project project = projectRepository.findById(id)
                 .orElseThrow(() -> new ProjectNotFoundException(id));
 
@@ -64,16 +65,17 @@ public class ProjectServiceImpl implements ProjectService {
 
         project.setName(dto.getName());
         project.setDescription(dto.getDescription());
-        Project updated = projectRepository.save(project);
-        return ProjectMapper.toResponseDto(updated);
+        projectRepository.save(project);
+        return true;
     }
 
     @Override
-    public void deleteProject(Long id) {
+    public boolean deleteProject(Long id) {
         if (!projectRepository.existsById(id)) {
             throw new ProjectNotFoundException(id);
         }
         projectRepository.deleteById(id);
+        return true;
     }
 
     @Override
@@ -97,6 +99,6 @@ public class ProjectServiceImpl implements ProjectService {
         }
         return taskRepository.findByProjectId(projectId).stream()
                 .map(TaskMapper::toResponseDto)
-                .collect(Collectors.toList());
+                .toList();
     }
 }

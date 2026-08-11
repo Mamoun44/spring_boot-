@@ -28,15 +28,8 @@ public class TaskController {
 
     // Pagination & Sorting endpoint
     @GetMapping
-    public ResponseEntity<Page<TaskResponseDto>> getAllTasks(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "id") String sortBy,
-            @RequestParam(defaultValue = "asc") String sortDir
-    ) {
-        Sort sort = sortDir.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
-        Pageable pageable = PageRequest.of(page, size, sort);
-        return ResponseEntity.ok(taskService.getAllTasks(pageable));
+    public ResponseEntity<List<TaskResponseDto>> getAllTasks() {
+        return ResponseEntity.ok(taskService.getAllTasks());
     }
 
     @GetMapping("/{id}")
@@ -62,17 +55,25 @@ public class TaskController {
     @PostMapping
     public ResponseEntity<TaskResponseDto> createTask(@Valid @RequestBody TaskRequestDto dto) {
         TaskResponseDto created = taskService.createTask(dto);
-        return new ResponseEntity<>(created, HttpStatus.CREATED); // 201 Created
+        return new ResponseEntity<>(created, HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<TaskResponseDto> updateTask(@PathVariable Long id, @Valid @RequestBody TaskRequestDto dto) {
-        return ResponseEntity.ok(taskService.updateTask(id, dto)); // 200 OK
+    public ResponseEntity<Void> updateTask(
+            @PathVariable Long id,
+            @Valid @RequestBody TaskRequestDto dto) {
+
+        taskService.updateTaskById(id, dto);
+
+        return ResponseEntity.noContent().build();
     }
+
 
     @PatchMapping("/{id}/status")
     public ResponseEntity<TaskResponseDto> updateTaskStatus(@PathVariable Long id, @RequestParam TaskStatus status) {
-        return ResponseEntity.ok(taskService.updateTaskStatus(id, status)); // 200 OK
+         taskService.updateTaskStatus(id, status);
+
+        return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/{id}")

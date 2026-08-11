@@ -11,8 +11,8 @@ public interface ProjectService {
     List<ProjectResponseDto> getAllProjects();
     ProjectResponseDto getProjectById(Long id);
     ProjectResponseDto createProject(ProjectRequestDto dto);
-    ProjectResponseDto updateProject(Long id, ProjectRequestDto dto);
-    void deleteProject(Long id);
+    boolean  updateProject(Long id, ProjectRequestDto dto);
+    boolean  deleteProject(Long id);
 
     TaskResponseDto addTaskToProject(Long projectId, TaskRequestDto dto);
     List<TaskResponseDto> getTasksByProjectId(Long projectId);

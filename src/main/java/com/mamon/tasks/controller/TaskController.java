@@ -14,8 +14,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/api/tasks")
 public class TaskController {
@@ -26,36 +24,76 @@ public class TaskController {
         this.taskService = taskService;
     }
 
-    // Pagination & Sorting endpoint
     @GetMapping
-    public ResponseEntity<List<TaskResponseDto>> getAllTasks() {
-        return ResponseEntity.ok(taskService.getAllTasks());
+    public ResponseEntity<Page<TaskResponseDto>> getTasks(
+
+            @RequestParam(required = false)
+            TaskStatus status,
+
+            @RequestParam(required = false)
+            TaskPriority priority,
+
+            @RequestParam(required = false)
+            Long project,
+
+            @RequestParam(required = false)
+            Boolean overdue,
+
+            @RequestParam(defaultValue = "0")
+            int page,
+
+            @RequestParam(defaultValue = "10")
+            int size,
+
+            @RequestParam(defaultValue = "id")
+            String sortBy,
+
+            @RequestParam(defaultValue = "asc")
+            String direction) {
+
+        Sort.Direction sortDirection =
+                direction.equalsIgnoreCase("desc")
+                        ? Sort.Direction.DESC
+                        : Sort.Direction.ASC;
+
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                Sort.by(sortDirection, sortBy)
+        );
+
+        Page<TaskResponseDto> tasks =
+                taskService.getTasks(
+                        status,
+                        priority,
+                        project,
+                        overdue,
+                        pageable
+                );
+
+        return ResponseEntity.ok(tasks);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<TaskResponseDto> getTaskById(@PathVariable Long id) {
-        return ResponseEntity.ok(taskService.getTaskById(id));
-    }
+    public ResponseEntity<TaskResponseDto> getTaskById(
+            @PathVariable Long id) {
 
-    @GetMapping("/status/{status}")
-    public ResponseEntity<List<TaskResponseDto>> getTasksByStatus(@PathVariable TaskStatus status) {
-        return ResponseEntity.ok(taskService.getTasksByStatus(status));
-    }
-
-    @GetMapping("/priority/{priority}")
-    public ResponseEntity<List<TaskResponseDto>> getTasksByPriority(@PathVariable TaskPriority priority) {
-        return ResponseEntity.ok(taskService.getTasksByPriority(priority));
-    }
-
-    @GetMapping("/overdue")
-    public ResponseEntity<List<TaskResponseDto>> getOverdueTasks() {
-        return ResponseEntity.ok(taskService.getOverdueTasks());
+        return ResponseEntity.ok(
+                taskService.getTaskById(id)
+        );
     }
 
     @PostMapping
-    public ResponseEntity<TaskResponseDto> createTask(@Valid @RequestBody TaskRequestDto dto) {
-        TaskResponseDto created = taskService.createTask(dto);
-        return new ResponseEntity<>(created, HttpStatus.CREATED);
+    public ResponseEntity<TaskResponseDto> createTask(
+            @Valid @RequestBody TaskRequestDto dto) {
+
+        TaskResponseDto created =
+                taskService.createTask(dto);
+
+        return new ResponseEntity<>(
+                created,
+                HttpStatus.CREATED
+        );
     }
 
     @PutMapping("/{id}")
@@ -68,17 +106,22 @@ public class TaskController {
         return ResponseEntity.noContent().build();
     }
 
-
     @PatchMapping("/{id}/status")
-    public ResponseEntity<TaskResponseDto> updateTaskStatus(@PathVariable Long id, @RequestParam TaskStatus status) {
-         taskService.updateTaskStatus(id, status);
+    public ResponseEntity<Void> updateTaskStatus(
+            @PathVariable Long id,
+            @RequestParam TaskStatus status) {
+
+        taskService.updateTaskStatus(id, status);
 
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteTask(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteTask(
+            @PathVariable Long id) {
+
         taskService.deleteTaskById(id);
-        return ResponseEntity.noContent().build(); // 204 No Content
+
+        return ResponseEntity.noContent().build();
     }
 }

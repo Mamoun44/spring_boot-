@@ -8,11 +8,11 @@ import com.mamon.tasks.model.Task;
 import com.mamon.tasks.model.TaskPriority;
 import com.mamon.tasks.model.TaskStatus;
 import com.mamon.tasks.repository.TaskRepository;
+import com.mamon.tasks.specification.TaskSpecification;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-
-import java.time.LocalDate;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class TaskServiceImpl implements TaskService {
@@ -24,17 +24,37 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public List<TaskResponseDto> getAllTasks() {
-        return taskRepository.findAll()
-                .stream()
-                .map(TaskMapper::toResponseDto)
-                .toList();
+    public Page<TaskResponseDto> getTasks(
+            TaskStatus status,
+            TaskPriority priority,
+            Long projectId,
+            Boolean overdue,
+            Pageable pageable) {
+
+        Specification<Task> specification =
+                Specification.where(
+                        TaskSpecification.hasStatus(status)
+                ).and(
+                        TaskSpecification.hasPriority(priority)
+                ).and(
+                        TaskSpecification.hasProject(projectId)
+                ).and(
+                        TaskSpecification.isOverdue(overdue)
+                );
+
+        return taskRepository
+                .findAll(specification, pageable)
+                .map(TaskMapper::toResponseDto);
     }
+
     @Override
     public TaskResponseDto createTask(TaskRequestDto dto) {
+
         Task task = TaskMapper.toEntity(dto);
-        Task saved = taskRepository.save(task);
-        return TaskMapper.toResponseDto(saved);
+
+        Task savedTask = taskRepository.save(task);
+
+        return TaskMapper.toResponseDto(savedTask);
     }
 
     @Override
@@ -46,9 +66,10 @@ public class TaskServiceImpl implements TaskService {
         return TaskMapper.toResponseDto(task);
     }
 
-
     @Override
-    public boolean updateTaskById(Long id, TaskRequestDto dto) {
+    public boolean updateTaskById(
+            Long id,
+            TaskRequestDto dto) {
 
         Task task = taskRepository.findById(id)
                 .orElseThrow(() -> new TaskNotFoundException(id));
@@ -65,7 +86,9 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public boolean updateTaskStatus(Long id, TaskStatus status) {
+    public boolean updateTaskStatus(
+            Long id,
+            TaskStatus status) {
 
         Task task = taskRepository.findById(id)
                 .orElseThrow(() -> new TaskNotFoundException(id));
@@ -87,30 +110,5 @@ public class TaskServiceImpl implements TaskService {
         taskRepository.deleteById(id);
 
         return true;
-    }
-
-    @Override
-    public List<TaskResponseDto> getTasksByStatus(TaskStatus status) {
-
-        return taskRepository.findByStatus(status)
-                .stream()
-                .map(TaskMapper::toResponseDto)
-                .toList();
-    }
-
-    @Override
-    public List<TaskResponseDto> getTasksByPriority(TaskPriority priority) {
-        return taskRepository.findByPriority(priority)
-                .stream()
-                .map(TaskMapper::toResponseDto)
-                .toList();
-    }
-
-    @Override
-    public List<TaskResponseDto> getOverdueTasks() {
-        return taskRepository.findOverdueTasks(LocalDate.now())
-                .stream()
-                .map(TaskMapper::toResponseDto)
-                .toList();
     }
 }

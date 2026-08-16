@@ -38,8 +38,8 @@ class TaskServiceImplTest {
         // Arrange
         Task task = new Task();
         task.setId(1L);
-        task.setTitle("Learn Testing");
-        task.setDescription("Learn JUnit and Mockito");
+        task.setTitle("Test");
+        task.setDescription("JUnit and Mockito");
 
         when(taskRepository.findById(1L))
                 .thenReturn(Optional.of(task));
@@ -51,9 +51,9 @@ class TaskServiceImplTest {
         // Assert
         assertNotNull(result);
         assertEquals(1L, result.getId());
-        assertEquals("Learn Testing", result.getTitle());
+        assertEquals("Test", result.getTitle());
         assertEquals(
-                "Learn JUnit and Mockito",
+                "JUnit and Mockito",
                 result.getDescription()
         );
     }

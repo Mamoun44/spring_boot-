@@ -36,7 +36,7 @@ class ProjectServiceImplTest {
 
         // Arrange
         TaskRequestDto request = new TaskRequestDto();
-        request.setTitle("Learn Testing");
+        request.setTitle("Testing");
 
         when(projectRepository.findById(999L))
                 .thenReturn(Optional.empty());
